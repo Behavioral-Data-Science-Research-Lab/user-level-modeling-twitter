@@ -10,30 +10,36 @@ LAST UPDATED: 08/26/2021
 OWNER: David J. Cox
 '''
 
-# In case it needs to be installed
-!pip install git+https://github.com/JustAnotherArchivist/snscrape.git
-
-import snscrape.modules.twitter as sntwitter
+try:
+    import snscrape.modules.twitter as sntwitter
+except:
+    pip3 install git+https://github.com/JustAnotherArchivist/snscrape.git
+    import snscrape.modules.twitter as sntwitter
+    
 import pandas as pd
 
 # Personal preference
 pd.set_option('display.max_columns', None)
 
-#%% Lists
-# Terms related ot online learning
-online_learning = ['digital learning', 'remote delivery', 'Online', 'online',
-                   'blended learning', 'Synchronous', 'Asynchronous',
-                   'Polysynchronous', 'Hybrid', 'Zoom','Microsoft teams',
-                   'Moodle', 'Canvas', 'Blackboard', 'WebX',
-                   'Google classroom']
+#%% Get all of my tweets
+!snscrape twitter-user davidjcox_ > my_tweets.json
 
-# Terms related to Covid-19 (Koh & Liew, 2021)
-covid_list = ['Covid', 'Covid-19', 'COVID19', 'Coronavirus', 'Corona virus']
+# Read in the json file
+tweets = pd.read_json('my_tweets.json', lines=True)
 
-# Terms related to higher education
-higher_ed = ['College', 'University', 'Professor', 'Teacher', 'Higher ed',
-             'Higher education']
+# Convert to dataframe
+tweets = pd.DataFrame(tweets)
 
+#%%
+# Creating list to append tweet data 
+tweets_list1 = []
+
+# Using TwitterSearchScraper to scrape data and append tweets to list
+for i,tweet in enumerate(sntwitter.TwitterSearchScraper('from:davidjcox_').get_items()): #declare a username 
+    tweets_list1.append([tweet.date, tweet.id, tweet.content, tweet.user.username]) #declare the attributes to be returned
+    
+# Creating a dataframe from the tweets list above 
+tweets_df1 = pd.DataFrame(tweets_list1, columns=['Datetime', 'Tweet Id', 'Text', 'Username'])
 
 #%% Scrape Twitter for seed dataframe
 !snscrape --jsonl --progress --max-results 10000000 --since 2020-03-01 twitter-search "#digitallearning until:2020-05-01" > text-query-tweets.json
